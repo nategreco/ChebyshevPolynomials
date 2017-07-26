@@ -26,12 +26,15 @@ template <class T_Type> class ChebyshevFit
 		ChebyshevFit( const std::vector<T_Type> x,
 					  const std::vector<T_Type> y,
 					  const int degrees );
-		T_Type **VandermondeMatrix( const std::vector<T_Type> x,
-									const int degrees );
-		T_Type **vandermatrix;
 		int order;
 		std::vector<T_Type> coefs;
 		~ChebyshevFit( );
+	private:
+		std::vector<std::vector<T_Type>>
+			VandermondeMatrix( const std::vector<T_Type> x,
+							   const int degrees );
+		std::vector<std::vector<T_Type>>
+			Transpose( const std::vector<std::vector<T_Type>> matrix );
 };
 
 /*****************************************************************************************/
@@ -62,13 +65,17 @@ template <class T_Type> ChebyshevFit<T_Type>::ChebyshevFit(
 		throw std::invalid_argument("Not enought points to fit polynomial degree.");
 	}
 
-	//Get Vandermore Matrix
-	vandermatrix = VandermondeMatrix(x, degrees);
+	//Get Vandermonde Matrix
+	std::vector<std::vector<T_Type>> vandermatrix{VandermondeMatrix(x, degrees) };
+
+	//Get transpose of Vandermonde Matrix
+	std::vector<std::vector<T_Type>> trans_matrix{Transpose(vandermatrix) };
+	
 }
 
-template <class T_Type> T_Type **ChebyshevFit<T_Type>::VandermondeMatrix(
-	const std::vector<T_Type> x,
-	const int degrees )
+template <class T_Type> std::vector<std::vector<T_Type>> 
+	ChebyshevFit<T_Type>::VandermondeMatrix( const std::vector<T_Type> x,
+											 const int degrees )
 {
 	//Check for non-zero degree
 	if ( degrees < 0 )
@@ -81,35 +88,50 @@ template <class T_Type> T_Type **ChebyshevFit<T_Type>::VandermondeMatrix(
 		throw std::invalid_argument("Not enought points to fit polynomial degree.");
 	}
 
-	//Create a 2D matrix with C-arrays
+	//Create a 2D matrix with vectors
 	int rows = x.size();
 	int cols = degrees + 1;
-	T_Type** matrix = new T_Type*[rows];
-	for( int i = 0; i < rows; i++ )
-	{
-		matrix[i] = new T_Type[cols];
-	}
+	std::vector<std::vector<T_Type>>  matrix;
 
 	//Generate values
-	for( int i = 0; i < rows; i++ )
+	for( int i = 0; i < x.size(); i++ )
 	{
-		matrix[i][0] = static_cast<T_Type>( 1 );
+		std::vector<T_Type> row;
+		row.push_back( static_cast<T_Type>( 1 ) );
 		if (degrees == 0) continue;
-		matrix[i][1] = x[i];
+		row.push_back(  x[i] );
 		if (degrees == 1) continue;
 		for( int j = 2; j < cols; j++ )
 		{
-			matrix[i][j] = matrix[i][j - 1] * 2.0 * x[i] - matrix[i][j - 2];
+			row.push_back(row[j - 1] * 2.0 * x[i] - row[j - 2] );
 		}
+		matrix.push_back(row);
 	}
 	
 	return matrix;
 	
 }
 
+template <class T_Type> std::vector<std::vector<T_Type>> 
+	ChebyshevFit<T_Type>::Transpose( const std::vector<std::vector<T_Type>> matrix )
+{
+	//Define new matrix
+	std::vector<std::vector<T_Type>> trans_matrix;
+
+	//Copy values from old one
+	for (int i = 0; i < matrix[0].size(); i++) {
+		std::vector<T_Type> row;
+		for (int j = 0; j < matrix.size(); j++) {
+			row.push_back( matrix[j][i] );
+		}
+		trans_matrix.push_back( row );
+	}
+	return trans_matrix;
+}
+
 template <class T_Type> ChebyshevFit<T_Type>::~ChebyshevFit( )
 {
-	delete vandermatrix;
+
 }
 
 #endif // CHEBYSHEV_POLY_H_INCLUDED
