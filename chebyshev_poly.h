@@ -19,7 +19,6 @@
 #include <vector>
 #include <stdexcept>
 
-
 /*****************************************************************************************/
 template <class T_Type> class ChebyshevFit
 {
@@ -54,12 +53,12 @@ template <class T_Type> ChebyshevFit<T_Type>::ChebyshevFit(
 	}
 	//Check for minimum number of points
 	if ( x.size() < 2 )
-	{ //ToDo, check min number of pts
+	{
 		throw std::invalid_argument("Not enough points.");
 	}
 	//Check enough points exist to fit degree
 	if ( x.size() < degrees )
-	{ //ToDo, not sure deg >= pts
+	{
 		throw std::invalid_argument("Not enought points to fit polynomial degree.");
 	}
 
@@ -78,7 +77,7 @@ template <class T_Type> T_Type **ChebyshevFit<T_Type>::VandermondeMatrix(
 	}
 	//Check enough points exist to fit degree
 	if ( x.size() < degrees )
-	{ //ToDo, not sure deg >= pts
+	{
 		throw std::invalid_argument("Not enought points to fit polynomial degree.");
 	}
 
@@ -86,15 +85,22 @@ template <class T_Type> T_Type **ChebyshevFit<T_Type>::VandermondeMatrix(
 	int rows = x.size();
 	int cols = degrees + 1;
 	T_Type** matrix = new T_Type*[rows];
-	for( int i = 0; i < rows; ++i )
+	for( int i = 0; i < rows; i++ )
 	{
 		matrix[i] = new T_Type[cols];
 	}
 
 	//Generate values
-	for( int i = 0; i < rows; ++i )
+	for( int i = 0; i < rows; i++ )
 	{
-		matrix[0][i] = static_cast<T_Type>( 1 );
+		matrix[i][0] = static_cast<T_Type>( 1 );
+		if (degrees == 0) continue;
+		matrix[i][1] = x[i];
+		if (degrees == 1) continue;
+		for( int j = 2; j < cols; j++ )
+		{
+			matrix[i][j] = matrix[i][j - 1] * 2.0 * x[i] - matrix[i][j - 2];
+		}
 	}
 	
 	return matrix;
