@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <math.h>
-#include "test.h"
+#include "gauss.h"
 
 //Global matrix
 float matrix[DEGREES][DEGREES];
